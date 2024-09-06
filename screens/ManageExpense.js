@@ -3,13 +3,16 @@ import { StyleSheet, Text, View } from "react-native";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/styles";
 import Button from "../components/UI/Button";
+import { useExpensesContext } from "../store/expensesContext";
 
 function ManageExpense({ route, navigation }) {
+  const { addExpense, deleteExpense, updateExpense } = useExpensesContext();
 
   const editedExpenseId = route.params?.expenseId;
   const isEditing = !!editedExpenseId; // reverse Truthy and Falsy value
 
   function deleteExpenseHandler() {
+    deleteExpense(editedExpenseId);
     navigation.goBack();
   }
 
@@ -18,6 +21,20 @@ function ManageExpense({ route, navigation }) {
   }
 
   function confirmHandler() {
+    if (isEditing) {
+      updateExpense(editedExpenseId, {
+        description: "test",
+        amount: 29.9,
+        date: new Date("2022-06-29"),
+      });
+    } else {
+      addExpense({
+        description: "test",
+        amount: 19.9,
+        date: new Date("2025-06-19"),
+      });
+    }
+
     navigation.goBack();
   }
 
