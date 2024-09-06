@@ -1,40 +1,18 @@
 import { useLayoutEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/styles";
-import Button from "../components/UI/Button";
 import { useExpensesContext } from "../store/expensesContext";
+import ExpenseForm from "../components/ManageExpense/ExpenseForm";
 
 function ManageExpense({ route, navigation }) {
-  const { addExpense, deleteExpense, updateExpense } = useExpensesContext();
+  const { deleteExpense } = useExpensesContext();
 
   const editedExpenseId = route.params?.expenseId;
   const isEditing = !!editedExpenseId; // reverse Truthy and Falsy value
 
   function deleteExpenseHandler() {
     deleteExpense(editedExpenseId);
-    navigation.goBack();
-  }
-
-  function cancelHandler() {
-    navigation.goBack();
-  }
-
-  function confirmHandler() {
-    if (isEditing) {
-      updateExpense(editedExpenseId, {
-        description: "test",
-        amount: 29.9,
-        date: new Date("2022-06-29"),
-      });
-    } else {
-      addExpense({
-        description: "test",
-        amount: 19.9,
-        date: new Date("2025-06-19"),
-      });
-    }
-
     navigation.goBack();
   }
 
@@ -46,14 +24,7 @@ function ManageExpense({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.buttonsContainer}>
-        <Button style={styles.button} mode="flat" onPress={cancelHandler}>
-          Cancel
-        </Button>
-        <Button style={styles.button} onPress={confirmHandler}>
-          {isEditing ? "Update" : "Add"}
-        </Button>
-      </View>
+      <ExpenseForm isEditing={isEditing} editedExpenseId={editedExpenseId} />
       {isEditing && (
         <View style={styles.deleteContainer}>
           <IconButton
@@ -75,15 +46,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     backgroundColor: GlobalStyles.colors.primary800,
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  button: {
-    minWidth: 120,
-    marginHorizontal: 8,
   },
   deleteContainer: {
     marginTop: 16,
