@@ -1,45 +1,13 @@
 import { createContext, useContext, useReducer } from "react";
 
-const DUMMY_EXPENSES = [
-  {
-    id: "e1",
-    description: "A pair of shoes",
-    amount: 59.99,
-    date: new Date("2024-9-1"),
-  },
-  {
-    id: "e2",
-    description: "A pair of glasses",
-    amount: 189.99,
-    date: new Date("2024-8-1"),
-  },
-  {
-    id: "e3",
-    description: "Some bananas",
-    amount: 9.99,
-    date: new Date("2024-9-2"),
-  },
-  {
-    id: "e4",
-    description: "Text books",
-    amount: 59.99,
-    date: new Date("2024-9-4"),
-  },
-  {
-    id: "e5",
-    description: "Another book",
-    amount: 29.99,
-    date: new Date("2024-8-20"),
-  },
-];
-
 const ExpensesContext = createContext();
 
 function expensesReducer(state, action) {
   switch (action.type) {
+    case "SET":
+      return action.payload.reverse();
     case "ADD":
-      const id = new Date().toString() + Math.random().toFixed();
-      return [{ ...action.payload, id: id }, ...state];
+      return [action.payload, ...state];
     case "UPDATE":
       const updatedExpenseIndex = state.findIndex(
         (expense) => expense.id === action.payload.id
@@ -60,8 +28,14 @@ function expensesReducer(state, action) {
 }
 
 function ExpensesContextProvider({ children }) {
-  const [state, dispatch] = useReducer(expensesReducer, DUMMY_EXPENSES);
+  const [state, dispatch] = useReducer(expensesReducer, []);
 
+  // 负责在App初次加载时从API读取全部的数据
+  function setExpenses(expense) {
+    dispatch({ type: "SET", payload: expense });
+  }
+
+  // 读取后App的数据操作都从local context中进行，这样不但可以实现数据的即时性，而且可以减少API调用
   function addExpense(expenseData) {
     dispatch({ type: "ADD", payload: expenseData });
   }
@@ -76,7 +50,13 @@ function ExpensesContextProvider({ children }) {
 
   return (
     <ExpensesContext.Provider
-      value={{ expenses: state, addExpense, deleteExpense, updateExpense }}
+      value={{
+        expenses: state,
+        setExpenses,
+        addExpense,
+        deleteExpense,
+        updateExpense,
+      }}
     >
       {children}
     </ExpensesContext.Provider>
@@ -84,10 +64,10 @@ function ExpensesContextProvider({ children }) {
 }
 
 export function useExpensesContext() {
-  const { expenses, addExpense, deleteExpense, updateExpense } =
+  const { expenses, setExpenses, addExpense, deleteExpense, updateExpense } =
     useContext(ExpensesContext);
 
-  return { expenses, addExpense, deleteExpense, updateExpense };
+  return { expenses, setExpenses, addExpense, deleteExpense, updateExpense };
 }
 
 export default ExpensesContextProvider;

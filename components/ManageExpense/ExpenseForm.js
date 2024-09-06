@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 
@@ -6,8 +6,15 @@ import Input from "./Input";
 import Button from "../../components/UI/Button";
 import { useExpensesContext } from "../../store/expensesContext";
 import ErrorText from "./ErrorText";
+import { editExpense, storeExpense } from "../../util/http";
+import LoadingOverlay from "../UI/LoadingOverlay";
 
-export default function ExpenseForm({ isEditing, editedExpenseId }) {
+export default function ExpenseForm({
+  isEditing,
+  editedExpenseId,
+  isLoading,
+  setIsLoading,
+}) {
   const { expenses, addExpense, updateExpense } = useExpensesContext();
   const navigation = useNavigation();
 
@@ -53,7 +60,7 @@ export default function ExpenseForm({ isEditing, editedExpenseId }) {
     navigation.goBack();
   }
 
-  function confirmHandler() {
+  async function confirmHandler() {
     const expenseData = {
       amount: Number(amountValue),
       date: new Date(dateValue),
@@ -95,13 +102,21 @@ export default function ExpenseForm({ isEditing, editedExpenseId }) {
     }
 
     if (isEditing) {
+      await editExpense(editedExpenseId, expenseData);
       updateExpense(editedExpenseId, expenseData);
+      setIsLoading(false);
     } else {
-      addExpense(expenseData);
+      // 把新加的数据post到firebase
+      const id = await storeExpense(expenseData);
+      // 更新local context - 这样就可以即时显示新添加的数据
+      addExpense({ ...expenseData, id: id });
+      setIsLoading(false);
     }
 
     navigation.goBack();
   }
+
+  if (isLoading) return <LoadingOverlay />;
 
   return (
     <View style={styles.form}>
@@ -168,6 +183,7 @@ export default function ExpenseForm({ isEditing, editedExpenseId }) {
 
 const styles = StyleSheet.create({
   form: {
+    padding: 24,
     marginTop: 30,
   },
   title: {
@@ -198,4 +214,3 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
 });
-
